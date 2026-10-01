@@ -25,6 +25,12 @@ input,select{width:100%;padding:13px 12px;border:1px solid #cbd7df;border-radius
 .check{display:flex;gap:10px;align-items:flex-start;margin:11px 0;font-size:12px;line-height:1.35}.check input{width:18px;height:18px;margin:0}
 button{width:100%;border:0;border-radius:12px;background:var(--blue);color:#fff;padding:15px;font-size:16px;font-weight:800;cursor:pointer;margin-top:8px}
 .note{text-align:center;color:#728592;font-size:10px;margin-top:12px}.hidden{display:none}
+
+.error-field{border:2px solid #c62828!important;background:#fff7f7!important}
+.error-check{outline:2px solid #c62828;outline-offset:2px}
+.form-errors{display:none;background:#fff1f1;border:1px solid #d9534f;color:#8b1e1e;border-radius:12px;padding:12px 14px;margin:0 0 16px;font-size:13px;line-height:1.45}
+.form-errors.show{display:block}
+.field-error-text{color:#b42318;font-size:11px;font-weight:700;margin-top:5px}
 </style>
 </head>
 <body><div class="phone">
@@ -66,7 +72,7 @@ button{width:100%;border:0;border-radius:12px;background:var(--blue);color:#fff;
 <div class="summary-row"><span>Modalidad</span><span id="summod">—</span></div>
 <div class="summary-row total"><span>TOTAL</span><span id="sumprice">0 €</span></div></div>
 
-<div class="section" style="margin-top:18px">
+<div class="section" style="margin-top:18px"><div id="formErrors" class="form-errors"></div>
 <label class="check"><input id="privacy" type="checkbox"> <span>Acepto la política de protección de datos.</span></label>
 <label class="check"><input id="promo" type="checkbox"> <span>Autorizo comunicaciones y uso de imágenes (opcional).</span></label>
 <button id="sendBtn" type="button" onclick="sendEnrollment()">ENVIAR INSCRIPCIÓN</button>
@@ -139,22 +145,61 @@ document.getElementById("conv").classList.add("hidden");document.getElementById(
 function priceNumber(){return euroToNumber(document.getElementById("sumprice").textContent)}
 const SUPABASE_URL='https://psqujdaukraggunpqksh.supabase.co';
 const SUPABASE_KEY='sb_publishable_Sedrxotu7h8DqiNJPvaTqg_mxj-yINP';
+function clearFormErrors(){
+ document.querySelectorAll('.error-field').forEach(e=>e.classList.remove('error-field'));
+ document.querySelectorAll('.error-check').forEach(e=>e.classList.remove('error-check'));
+ document.querySelectorAll('.field-error-text').forEach(e=>e.remove());
+ const box=document.getElementById('formErrors');box.classList.remove('show');box.innerHTML='';
+}
+function addFieldError(id,msg,errors){
+ const el=document.getElementById(id); if(!el)return;
+ el.classList.add(el.type==='checkbox'?'error-check':'error-field');
+ const note=document.createElement('div');note.className='field-error-text';note.textContent=msg;
+ const wrap=el.closest('.check'); (wrap||el).insertAdjacentElement('afterend',note);
+ errors.push({id,msg});
+}
+function validateEnrollment(){
+ clearFormErrors(); const errors=[];
+ const first=firstname.value.trim(),s1=surname1.value.trim(),documento=doc.value.trim(),telefono=phone.value.trim(),mail=email.value.trim();
+ if(!s1)addFieldError('surname1','Introduce el primer apellido.',errors);
+ if(!first)addFieldError('firstname','Introduce el nombre.',errors);
+ if(!documento)addFieldError('doc','Introduce el número de DNI/NIE/Pasaporte.',errors);
+ if(!telefono)addFieldError('phone','Introduce un teléfono de contacto.',errors);
+ else if(telefono.replace(/\D/g,'').length<9)addFieldError('phone','Revisa el teléfono: parece incompleto.',errors);
+ if(!mail)addFieldError('email','Introduce un email.',errors);
+ else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail))addFieldError('email','Revisa el email: el formato no es válido.',errors);
+ if(title!=='LN'){
+   if(!modtype.value)addFieldError('modtype','Elige “Desglose de precios” o “Paquetes descuento”.',errors);
+   const modalidad=summod.textContent.trim(),precio=priceNumber();
+   if(modtype.value&&(modalidad==='—'||!precio)){options.classList.add('error-field');errors.push({id:'options',msg:'Selecciona al menos una modalidad o concepto.'})}
+ }
+ if(!privacy.checked)addFieldError('privacy','Debes aceptar la política de protección de datos.',errors);
+ if(errors.length){
+   const box=document.getElementById('formErrors');
+   box.innerHTML='<b>No podemos enviar todavía la inscripción.</b><br>'+errors.map(e=>'• '+e.msg).join('<br>');
+   box.classList.add('show');
+   const firstEl=document.getElementById(errors[0].id); if(firstEl){firstEl.scrollIntoView({behavior:'smooth',block:'center'});if(firstEl.focus)firstEl.focus()}
+   return false;
+ }
+ return true;
+}
 async function sendEnrollment(){
  const btn=document.getElementById('sendBtn');
- const first=document.getElementById('firstname').value.trim(), s1=document.getElementById('surname1').value.trim(), s2=document.getElementById('surname2').value.trim();
- const documento=document.getElementById('doc').value.trim().toUpperCase(), telefono=document.getElementById('phone').value.trim(), email=document.getElementById('email').value.trim();
- if(!first||!s1||!documento||!telefono||!email) return alert('Completa nombre, primer apellido, documento, teléfono y email.');
- if(!document.getElementById('privacy').checked) return alert('Debes aceptar la política de protección de datos.');
- const modalidad=document.getElementById('summod').textContent.trim(), precio=priceNumber();
- if(title!=='LN' && (modalidad==='—'||!precio)) return alert('Selecciona la modalidad o los conceptos que quieres contratar.');
- const row={nombre:[first,s1,s2].filter(Boolean).join(' '),tipo_documento:document.getElementById('doctype').value,documento,telefono,email,curso:title,anio:new Date().getFullYear(),convocatoria:['PER','PY','CY'].includes(title)?document.getElementById('convsel').value:null,modalidad,conceptos:modalidad,precio,pagado:0,estado_pago:'Pendiente',estado_expediente:'Pendiente',documentacion_completa:false,practicas_completas:false,observaciones:'Inscripción recibida desde la web',autorizacion_email:document.getElementById('promo').checked,autorizacion_whatsapp:document.getElementById('promo').checked};
+ if(!validateEnrollment())return;
+ const first=firstname.value.trim(),s1=surname1.value.trim(),s2=surname2.value.trim();
+ const documento=doc.value.trim().toUpperCase(),telefono=phone.value.trim(),mail=email.value.trim();
+ const modalidad=summod.textContent.trim(),precio=priceNumber();
+ const row={nombre:[first,s1,s2].filter(Boolean).join(' '),tipo_documento:doctype.value,documento,telefono,email:mail,curso:title,anio:new Date().getFullYear(),convocatoria:['PER','PY','CY'].includes(title)?convsel.value:null,modalidad,conceptos:modalidad,precio,pagado:0,estado_pago:'Pendiente',estado_expediente:'Pendiente',documentacion_completa:false,practicas_completas:false,observaciones:'Inscripción recibida desde la web',autorizacion_email:promo.checked,autorizacion_whatsapp:promo.checked};
  btn.disabled=true;btn.textContent='ENVIANDO…';
  try{
-  const r=await fetch(SUPABASE_URL+'/rest/v1/alumnos',{method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(row)});
-  if(!r.ok) throw new Error(await r.text());
-  btn.textContent='INSCRIPCIÓN ENVIADA ✓';
-  alert('Inscripción enviada correctamente a Bigboy Náutica Gestión.');
- }catch(e){console.error(e);btn.disabled=false;btn.textContent='ENVIAR INSCRIPCIÓN';alert('No se ha podido enviar la inscripción. Comprueba la conexión o contacta con Bigboy Náutica.');}
+   const r=await fetch(SUPABASE_URL+'/rest/v1/alumnos',{method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(row)});
+   if(!r.ok) throw new Error(await r.text());
+   btn.textContent='INSCRIPCIÓN ENVIADA ✓';
+   alert('Inscripción enviada correctamente a Bigboy Náutica Gestión.');
+ }catch(e){
+   console.error(e);btn.disabled=false;btn.textContent='ENVIAR INSCRIPCIÓN';
+   const box=document.getElementById('formErrors');box.innerHTML='<b>No se ha podido enviar la inscripción.</b><br>Los datos parecen correctos, pero ha fallado la conexión con Bigboy Náutica Gestión. Inténtalo de nuevo en unos segundos.';box.classList.add('show');box.scrollIntoView({behavior:'smooth',block:'center'});
+ }
 }
 </script>
 </body></html>
