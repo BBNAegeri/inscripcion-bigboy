@@ -137,4 +137,9 @@ document.querySelectorAll(".choice").forEach(el=>el.onclick=()=>{
 document.getElementById("convsel").onchange=e=>document.getElementById("sumconv").textContent=e.target.value;
 document.getElementById("conv").classList.add("hidden");document.getElementById("sumconvrow").classList.add("hidden");render();
 </script>
+ <script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
+</script>
 </body></html>
