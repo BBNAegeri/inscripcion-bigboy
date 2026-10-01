@@ -1,0 +1,17 @@
+{
+  "name": "Bigboy Náutica Gestión",
+  "short_name": "Bigboy Náutica",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "Logotipo D entrelazado azul y blanco.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
