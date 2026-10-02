@@ -78,7 +78,7 @@ function practiceCell(s,t){
 }
 async function editPractices(studentId,type,courseCode){
  const cfg=practiceConfig.find(x=>String(x.curso_codigo).toUpperCase()===String(courseCode).toUpperCase()&&String(x.tipo).toLowerCase()===String(type).toLowerCase());
- const defaults=courseCode==='PER'?{Motor:4,Radio:3,Vela:4}:courseCode==='PNB'?{Motor:2,Radio:1,Vela:4}:{};
+ const defaults=courseCode==='PER'?{Motor:4,Radio:0,Vela:4}:courseCode==='PNB'?{Motor:2,Radio:1,Vela:4}:{};
  const total=cfg?+cfg.numero_sesiones:(defaults[type]||1);
  const current=practices.filter(p=>String(p.alumno_id)===String(studentId)&&String(p.tipo).toLowerCase()===String(type).toLowerCase()).sort((a,b)=>String(a.fecha||'').localeCompare(String(b.fecha||'')));
  const now=new Date(), today=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
