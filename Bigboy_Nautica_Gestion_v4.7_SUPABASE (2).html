@@ -70,7 +70,7 @@ function practiceInfo(s,t){let configured=(practiceConfig.find(x=>String(x.curso
 function practiceCell(s,t){
  if(!['PNB','PER'].includes(s.course))return '—';
  const opt=String(s.option||'').toLowerCase();
- if(s.course==='PER'&&t==='Radio')return '—';
+ 
  if(t==='Vela'&&opt.includes('solo motor'))return '<span class="small">No incluida</span>';
  if(t==='Motor'&&opt.includes('solo vela'))return '<span class="small">No incluido</span>';
  let p=practiceInfo(s,t);if(!p.req)return '—';
