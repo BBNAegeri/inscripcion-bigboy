@@ -66,11 +66,11 @@ async function saveStudent(){let c=course.value,sel=c==='PER'?perOption:c==='PY'
 
 let studentCourseFilter='PNB';
 function setupStudentTabs(){document.querySelectorAll('.student-course').forEach(b=>b.onclick=()=>{studentCourseFilter=b.dataset.course;document.querySelectorAll('.student-course').forEach(x=>{x.classList.toggle('active',x===b);x.classList.toggle('secondary',x!==b)});studentYear.value='all';studentCall.value='all';renderStudents()})}
-function practiceInfo(s,t){let configured=(practiceConfig.find(x=>String(x.curso_codigo).toUpperCase()===String(s.course).toUpperCase()&&String(x.tipo).toLowerCase()===t.toLowerCase())||{}).numero_sesiones;let defaults=s.course==='PER'?{Motor:4,Radio:0,Vela:4}:s.course==='PNB'?{Motor:2,Radio:1,Vela:4}:{};let req=+configured||defaults[t]||0;let a=practices.filter(p=>+p.alumno_id===+s.id&&String(p.tipo).toLowerCase()===t.toLowerCase());let done=a.filter(p=>p.fecha).length;return {req,done,ok:req>0&&done>=req,rows:a};}
+function practiceInfo(s,t){let configured=(practiceConfig.find(x=>String(x.curso_codigo).toUpperCase()===String(s.course).toUpperCase()&&String(x.tipo).toLowerCase()===t.toLowerCase())||{}).numero_sesiones;let defaults=s.course==='PER'?{Motor:4,Radio:3,Vela:4}:s.course==='PNB'?{Motor:2,Radio:1,Vela:4}:{};let req=+configured||defaults[t]||0;let a=practices.filter(p=>+p.alumno_id===+s.id&&String(p.tipo).toLowerCase()===t.toLowerCase());let done=a.filter(p=>p.fecha).length;return {req,done,ok:req>0&&done>=req,rows:a};}
 function practiceCell(s,t){
  if(!['PNB','PER'].includes(s.course))return '—';
  const opt=String(s.option||'').toLowerCase();
- if(s.course==='PER'&&t==='Radio')return '—';
+ 
  if(t==='Vela'&&opt.includes('solo motor'))return '<span class="small">No incluida</span>';
  if(t==='Motor'&&opt.includes('solo vela'))return '<span class="small">No incluido</span>';
  let p=practiceInfo(s,t);if(!p.req)return '—';
