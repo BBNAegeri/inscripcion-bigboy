@@ -115,7 +115,15 @@ async function saveLicenseStudent(){
  try{
   await api('/rest/v1/licencia_alumnos','POST',{licencia_id:l.id,alumno_id:a.id,pagado:(+a.paid||0)>= (+a.price||125),resena_enviada:false},'return=minimal');
   addLicStudentDialog.close();await loadStudents();
- }catch(e){alert('No se pudo asignar el alumno: '+e.message)}
+ }catch(e){alert('No se pudo asignar el alumno: '+e.message)}async function deleteLicenseStudent(licenciaId,alumnoId){
+  if(!confirm('¿Eliminar este alumno de la licencia?'))return;
+  try{
+    await api('/rest/v1/licencia_alumnos?licencia_id=eq.'+licenciaId+'&alumno_id=eq.'+alumnoId,'DELETE',null,'return=minimal');
+    await loadStudents();
+  }catch(e){
+    alert('No se pudo eliminar el alumno de la licencia: '+e.message);
+  }
+}
 }
 function toggleFinished(i){licenses[i].finished=!licenses[i].finished;save();renderAll()}function sendReview(i,j){let s=licenses[i].students[j];if(!s.phone)return alert('Este alumno no tiene teléfono');let tel=s.phone.replace(/\D/g,'');if(tel.length===9)tel='34'+tel;window.open('https://wa.me/'+tel+'?text='+encodeURIComponent(reviewMsg(s.name)),'_blank');s.reviewSent=true;save();renderAll()}
 function renderWebLn(){const assigned=new Set(licenses.flatMap(l=>l.students.map(x=>x.id)));let a=students.filter(s=>s.course==='LN'&&(s.obs||'').includes('web')&&!assigned.has(s.id));webLnList.innerHTML=a.length?a.map(s=>`<div style="padding:8px 0;border-bottom:1px solid var(--l)"><b>${s.name}</b> · ${s.doc} · ${s.phone||''} · ${s.email||''} <span class="badge orange">Pendiente de asignar fecha</span></div>`).join(''):'No hay inscripciones web pendientes.'}
