@@ -28,6 +28,18 @@
 const SUPABASE_URL='https://psqujdaukraggunpqksh.supabase.co';
 const SUPABASE_KEY='sb_publishable_Sedrxotu7h8DqiNJPvaTqg_mxj-yINP';
 let accessToken=localStorage.getItem('bb_supabase_token')||'';
+if(accessToken){
+  try{
+    const payload=JSON.parse(atob(accessToken.split('.')[1]));
+    if(payload.exp && payload.exp*1000<=Date.now()){
+      localStorage.removeItem('bb_supabase_token');
+      accessToken='';
+    }
+  }catch(e){
+    localStorage.removeItem('bb_supabase_token');
+    accessToken='';
+  }
+}
 async function api(path,method='GET',body=null,prefer='') {const h={apikey:SUPABASE_KEY,'Content-Type':'application/json'};if(accessToken)h.Authorization='Bearer '+accessToken;if(prefer)h.Prefer=prefer;const r=await fetch(SUPABASE_URL+path,{method,headers:h,body:body?JSON.stringify(body):null});if(!r.ok)throw new Error(await r.text());if(r.status===204)return null;const t=await r.text();return t?JSON.parse(t):null}
 async function login(){loginMsg.textContent='Entrando…';const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),12000);try{const r=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:loginEmail.value.trim(),password:loginPassword.value}),signal:controller.signal});const d=await r.json();if(!r.ok)throw new Error(d.error_description||d.msg||d.error||'Acceso incorrecto');if(!d.access_token)throw new Error('Supabase no devolvió una sesión válida');accessToken=d.access_token;localStorage.setItem('bb_supabase_token',accessToken);loginMsg.textContent='Acceso correcto. Cargando datos…';loginDialog.close();syncUser.textContent=' · '+(d.user?.email||loginEmail.value.trim());logoutBtn.style.display='inline-block';await loadStudents()}catch(e){if(!loginDialog.open)loginDialog.showModal();loginMsg.textContent=e.name==='AbortError'?'La conexión con Supabase ha tardado demasiado. Comprueba Internet y vuelve a pulsar Entrar.':('Error de acceso: '+e.message)}finally{clearTimeout(timer)}}
 async function registerAdmin(){if(loginEmail.value.trim().toLowerCase()!=='bigboynautica@gmail.com')return loginMsg.textContent='La cuenta de gestión debe ser bigboynautica@gmail.com';loginMsg.textContent='Creando acceso…';try{const r=await fetch(SUPABASE_URL+'/auth/v1/signup',{method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:loginEmail.value.trim(),password:loginPassword.value})});const d=await r.json();if(!r.ok)throw new Error(d.msg||'No se pudo crear');loginMsg.textContent=d.session?'Acceso creado. Entrando…':'Cuenta creada. Revisa el correo de Bigboy Náutica para confirmar y después pulsa Entrar.';if(d.session){accessToken=d.access_token;localStorage.setItem('bb_supabase_token',accessToken);loginDialog.close();await loadStudents()}}catch(e){loginMsg.textContent=e.message}}
