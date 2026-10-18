@@ -14,7 +14,8 @@ for(const file of fs.readdirSync(path.join(__dirname,'..')).filter(f=>/v4\.7.*\.
    {id:4,name:'José García López',course:'PY',year:2026,call:'Marzo'}
   ];
   const body={innerHTML:''};
-  const context=vm.createContext({students,studentCourseFilter:'PER',studentYear:{value:'2026'},studentCall:{value:'Marzo'},studentCallWrap:{style:{}},perStudentSearchWrap:{style:{}},perStudentSearch:{value:''},studentSectionTitle:{},studentTable:{querySelector:()=>body},eur:()=>'',practiceCell:()=>''});
+  const otherSearchControls=Object.fromEntries(['pnb','py','cy'].flatMap(prefix=>[[prefix+'StudentSearch',{value:''}],[prefix+'StudentSearchWrap',{style:{}}]]));
+  const context=vm.createContext({...otherSearchControls,students,studentCourseFilter:'PER',studentYear:{value:'2026'},studentCall:{value:'Marzo'},studentCallWrap:{style:{}},perStudentSearchWrap:{style:{}},perStudentSearch:{value:''},studentSectionTitle:{},studentTable:{querySelector:()=>body},eur:()=>'',practiceCell:()=>''});
   vm.runInContext(render,context);
   const search=query=>{context.perStudentSearch.value=query;context.renderStudents();return body.innerHTML};
   return {context,students,search,body};
